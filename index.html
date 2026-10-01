@@ -609,7 +609,7 @@ async function evolveLocally(){
     if(status) status.textContent='DNA ANALYSIS';
 
     const inputCanvas=document.createElement('canvas');
-    const maxSide=768;
+    const maxSide=480;
     const iw=sourceImage.naturalWidth||sourceImage.width;
     const ih=sourceImage.naturalHeight||sourceImage.height;
     const scale=Math.min(1,maxSide/Math.max(iw,ih));
