@@ -661,20 +661,31 @@ async function evolveLocally(){
     });
 
     if(!response.ok){
-      let detail='';
-      try{
-        const data=await response.json();
-        detail=
-(data.error || '') +
-"\n\nDEBUG:\n" +
-(data.debug || '') +
-"\n\nRAW:\n" +
-JSON.stringify(data);
-      }catch(_){
-        detail=await response.text();
-      }
-      throw new Error(detail||`Cloudflare Worker returned HTTP ${response.status}.`);
-    }
+
+  let detail='';
+
+  try{
+
+    const data = await response.json();
+
+    detail = JSON.stringify(
+      data,
+      null,
+      2
+    );
+
+  }catch(_){
+
+    detail = await response.text();
+
+  }
+
+
+  throw new Error(
+    detail || `Cloudflare error ${response.status}`
+  );
+
+}
 
     button.textContent='RENDERING...';
     if(status) status.textContent='C.I. PROCESSING';
