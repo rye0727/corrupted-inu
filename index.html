@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Corrupted Inu — $CI</title>
+  <meta name="description" content="They used Inu too many times. Now his DNA is corrupted.">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: #050505;
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* NAVIGATION */
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      padding: 22px 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 5, 5, 0.75);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 0, 80, 0.15);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    .logo span {
+      color: #ff174f;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    nav a:hover {
+      color: #ff174f;
+    }
+
+    .nav-btn {
+      border: 1px solid #ff174f;
+      padding: 10px 18px;
+      border-radius: 4px;
+      color: #ff174f;
+    }
+
+    /* HERO */
+
+    .hero {
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 20px 80px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(255, 0, 70, 0.18), transparent 35%),
+        radial-gradient(circle at 50% 80%, rgba(120, 0, 255, 0.08), transparent 30%),
+        #050505;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      opacity: 0.15;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: linear-gradient(to bottom, transparent, black, transparent);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 900px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      color: #ff174f;
+      border: 1px solid rgba(255, 23, 79, 0.5);
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(70px, 13vw, 170px);
+      line-height: 0.8;
+      font-weight: 1000;
+      letter-spacing: -8px;
+      text-transform: uppercase;
+      position: relative;
+    }
+
+    h1::before,
+    h1::after {
+      content: "$CI";
+      position: absolute;
+      left: 0;
+      right: 0;
+      opacity: 0.35;
+    }
+
+    h1::before {
+      color: #ff174f;
+      transform: translate(7px, 4px);
+      clip-path: inset(0 0 55% 0);
+    }
+
+    h1::after {
+      color: #00ffff;
+      transform: translate(-7px, -3px);
+      clip-path: inset(55% 0 0 0);
+    }
+
+    .hero-subtitle {
+      margin: 35px auto;
+      max-width: 650px;
+      font-size: clamp(17px, 2vw, 22px);
+      line-height: 1.6;
+      color: #bcbcbc;
+    }
+
+    .hero-subtitle strong {
+      color: white;
+    }
+
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 26px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 12px;
+      border: 1px solid #ff174f;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-primary {
+      background: #ff174f;
+      color: #050505;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 23, 79, 0.25);
+    }
+
+    .scroll {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #555;
+    }
+
+    /* STORY */
+
+    section {
+      padding: 120px 7%;
+      position: relative;
+    }
+
+    .section-label {
+      color: #ff174f;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      font-size: clamp(42px, 7vw, 90px);
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: -4px;
+      margin-bottom: 35px;
+    }
+
+    .story {
+      background: #080808;
+    }
+
+    .story-grid {
+      max-width: 1100px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 70px;
+      align-items: center;
+    }
+
+    .story-copy {
+      color: #999;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .story-copy p {
+      margin-bottom: 22px;
+    }
+
+    .story-copy strong {
+      color: white;
+    }
+
+    .glitch-box {
+      min-height: 430px;
+      border: 1px solid rgba(255, 23, 79, 0.4);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 4px,
+          rgba(255, 23, 79, 0.04) 5px
+        ),
+        #050505;
+      overflow: hidden;
+    }
+
+    .glitch-dog {
+      font-size: 150px;
+      filter: drop-shadow(0 0 25px rgba(255, 23, 79, 0.5));
+      animation: glitch 2s infinite;
+    }
+
+    @keyframes glitch {
+      0%, 90%, 100% {
+        transform: translate(0);
+      }
+
+      92% {
+        transform: translate(-8px, 3px);
+      }
+
+      94% {
+        transform: translate(8px, -3px);
+      }
+
+      96% {
+        transform: translate(-4px, 1px);
+      }
+    }
+
+    .glitch-line {
+      position: absolute;
+      height: 2px;
+      background: #ff174f;
+      width: 70%;
+      opacity: 0.5;
+    }
+
+    .line-one {
+      top: 35%;
+      left: -10%;
+    }
+
+    .line-two {
+      top: 63%;
+      right: -15%;
+    }
+
+    /* LAB */
+
+    .lab {
+      background: #050505;
+      text-align: center;
+    }
+
+    .lab-inner {
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .lab-description {
+      max-width: 650px;
+      margin: 0 auto 45px;
+      color: #888;
+      line-height: 1.7;
+    }
+
+    .lab-card {
+      border: 1px solid #222;
+      padding: 40px;
+      background: #090909;
+      text-align: left;
+    }
+
+    .upload-area {
+      border: 1px dashed #444;
+      padding: 60px 20px;
+      text-align: center;
+      transition: 0.2s;
+    }
+
+    .upload-area:hover {
+      border-color: #ff174f;
+      background: rgba(255, 23, 79, 0.03);
+    }
+
+    .upload-icon {
+      font-size: 45px;
+      margin-bottom: 15px;
+    }
+
+    .upload-area h3 {
+      margin-bottom: 10px;
+    }
+
+    .upload-area p {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      display: inline-block;
+      background: #ff174f;
+      color: #050505;
+      padding: 13px 24px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    #fileName {
+      margin-top: 20px;
+      color: #ff174f;
+      font-size: 12px;
+    }
+
+    /* TOKEN */
+
+    .token {
+      background: #080808;
+    }
+
+    .token-inner {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 50px;
+    }
+
+    .token-card {
+      border: 1px solid #222;
+      padding: 30px;
+      background: #050505;
+    }
+
+    .token-card .number {
+      font-size: 42px;
+      font-weight: 900;
+      color: #ff174f;
+      margin-bottom: 10px;
+    }
+
+    .token-card h3 {
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    .token-card p {
+      color: #666;
+      margin-top: 10px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    /* FOOTER */
+
+    footer {
+      border-top: 1px solid #1b1b1b;
+      padding: 50px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      color: #555;
+      font-size: 12px;
+    }
+
+    footer strong {
+      color: #fff;
+    }
+
+    .socials {
+      display: flex;
+      gap: 20px;
+    }
+
+    .socials a:hover {
+      color: #ff174f;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 800px) {
+
+      nav ul {
+        display: none;
+      }
+
+      nav {
+        padding: 18px 5%;
+      }
+
+      .story-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .token-grid {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 90px 6%;
+      }
+
+      .glitch-box {
+        min-height: 300px;
+      }
+
+      .glitch-dog {
+        font-size: 110px;
+      }
+
+      .lab-card {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <a href="#" class="logo">CORRUPTED<span>INU</span></a>
+
+    <ul>
+      <li><a href="#story">Lore</a></li>
+      <li><a href="#lab">Corruption Lab</a></li>
+      <li><a href="#token">Token</a></li>
+    </ul>
+
+    <a href="#lab" class="nav-btn">Enter Lab</a>
+  </nav>
+
+
+  <!-- HERO -->
+
+  <header class="hero">
+
+    <div class="grid"></div>
+
+    <div class="hero-content">
+
+      <div class="eyebrow">SYSTEM ERROR // INU DNA DETECTED</div>
+
+      <h1>$CI</h1>
+
+      <p class="hero-subtitle">
+        They used <strong>Inu</strong> too many times.
+        Different coins. Different names. Different personalities.
+        <br><br>
+        Now his DNA is <strong>corrupted.</strong>
+      </p>
+
+      <div class="cta-row">
+        <a href="#lab" class="btn btn-primary">Corrupt Your Inu</a>
+        <a href="#story" class="btn btn-secondary">Read The Lore</a>
+      </div>
+
+    </div>
+
+    <div class="scroll">SCROLL TO INFECT</div>
+
+  </header>
+
+
+  <!-- STORY -->
+
+  <section class="story" id="story">
+
+    <div class="story-grid">
+
+      <div>
+
+        <div class="section-label">01 // THE INCIDENT</div>
+
+        <h2 class="section-title">
+          Inu<br>
+          Wasn't<br>
+          Supposed<br>
+          To Break.
+        </h2>
+
+        <div class="story-copy">
+
+          <p>
+            They cloned him. They renamed him.
+            They launched him again. And again.
+          </p>
+
+          <p>
+            Every cycle left something behind.
+            Every new Inu changed the original.
+          </p>
+
+          <p>
+            Until one day, the code couldn't handle it anymore.
+          </p>
+
+          <p>
+            <strong>His DNA corrupted.</strong>
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="glitch-box">
+
+        <div class="glitch-line line-one"></div>
+        <div class="glitch-line line-two"></div>
+
+        <div class="glitch-dog">🐕</div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- CORRUPTION LAB -->
+
+  <section class="lab" id="lab">
+
+    <div class="lab-inner">
+
+      <div class="section-label">02 // CORRUPTION LAB</div>
+
+      <h2 class="section-title">
+        Corrupt<br>
+        Your Inu.
+      </h2>
+
+      <p class="lab-description">
+        Every Inu deserves a little corruption.
+        Upload your image and enter the lab.
+        The system will determine how corrupted you really are.
+      </p>
+
+      <div class="lab-card">
+
+        <div class="upload-area">
+
+          <div class="upload-icon">⚠️</div>
+
+          <h3>UPLOAD SPECIMEN</h3>
+
+          <p>
+            PNG / JPG / WEBP
+          </p>
+
+          <label for="fileUpload" class="upload-label">
+            Select Image
+          </label>
+
+          <input
+            type="file"
+            id="fileUpload"
+            accept="image/png,image/jpeg,image/webp"
+          >
+
+          <div id="fileName"></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- TOKEN -->
+
+  <section class="token" id="token">
+
+    <div class="token-inner">
+
+      <div class="section-label">03 // THE VIRUS</div>
+
+      <h2 class="section-title">
+        $CI
+      </h2>
+
+      <div class="token-grid">
+
+        <div class="token-card">
+          <div class="number">01</div>
+          <h3>Corrupted</h3>
+          <p>
+            The original Inu code has been permanently compromised.
+          </p>
+        </div>
+
+        <div class="token-card">
+          <div class="number">02</div>
+          <h3>Unstable</h3>
+          <p>
+            Nobody knows what happens next. That's the point.
+          </p>
+        </div>
+
+        <div class="token-card">
+          <div class="number">03</div>
+          <h3>Inu</h3>
+          <p>
+            The meme that survived being copied too many times.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div>
+      <strong>$CI — CORRUPTED INU</strong>
+      <br>
+      <span>THE INU HAS BEEN COMPROMISED.</span>
+    </div>
+
+    <div class="socials">
+      <a href="#" target="_blank">X</a>
+      <a href="#" target="_blank">TELEGRAM</a>
+      <a href="#lab">LAB</a>
+    </div>
+
+  </footer>
+
+
+  <script>
+
+    const fileUpload = document.getElementById("fileUpload");
+    const fileName = document.getElementById("fileName");
+
+    fileUpload.addEventListener("change", function() {
+
+      if (this.files.length > 0) {
+
+        fileName.textContent =
+          "SPECIMEN LOADED: " + this.files[0].name;
+
+      } else {
+
+        fileName.textContent = "";
+
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
