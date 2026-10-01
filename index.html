@@ -664,7 +664,12 @@ async function evolveLocally(){
       let detail='';
       try{
         const data=await response.json();
-        detail=data.error||JSON.stringify(data);
+        detail=
+(data.error || '') +
+"\n\nDEBUG:\n" +
+(data.debug || '') +
+"\n\nRAW:\n" +
+JSON.stringify(data);
       }catch(_){
         detail=await response.text();
       }
