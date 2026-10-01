@@ -594,23 +594,134 @@ function setupCanvas(){
   return {w,h};
 }
 
-function drawCorruption(){
-  if(!sourceImage){ alert('UPLOAD AN IMAGE FIRST.'); return; }
-  const {w,h}=setupCanvas();
-  const img=ctx.getImageData(0,0,w,h), d=img.data;
-  const copy=new Uint8ClampedArray(d);
-  const sliceH=Math.max(2,Math.floor(h*.018));
-  for(let y=0;y<h;y++){
-    const shift=(Math.random()<.16?Math.floor((Math.random()-.5)*w*.20):0);
-    for(let x=0;x<w;x++){
-      const sx=Math.max(0,Math.min(w-1,x-shift));
-      const i=(y*w+x)*4, s=(y*w+sx)*4;
-      const glitch=Math.random()<.045;
-      d[i]=Math.min(255,copy[s]+(glitch?48:0));
-      d[i+1]=Math.max(0,copy[s+1]-(glitch?42:0));
-      d[i+2]=Math.min(255,copy[s+2]+(glitch?30:0));
-    }
+async function drawCorruption(){
+
+  if(!sourceImage){
+    alert('UPLOAD AN IMAGE FIRST.');
+    return;
   }
+
+  const {w,h}=setupCanvas();
+
+  // draw original first
+  ctx.drawImage(sourceImage,0,0,w,h);
+
+
+  // corruption animation
+  const frames = 18;
+
+
+  for(let frame=0; frame<frames; frame++){
+
+    const img = ctx.getImageData(0,0,w,h);
+    const d = img.data;
+    const original = new Uint8ClampedArray(d);
+
+
+    const intensity = frame / frames;
+
+
+    for(let y=0;y<h;y++){
+
+      const shift =
+        Math.random() < (0.15 + intensity*.25)
+        ? Math.floor((Math.random()-0.5)*w*(0.1+intensity*.25))
+        : 0;
+
+
+      for(let x=0;x<w;x++){
+
+        const sx=Math.max(
+          0,
+          Math.min(
+            w-1,
+            x-shift
+          )
+        );
+
+
+        const i=(y*w+x)*4;
+        const s=(y*w+sx)*4;
+
+
+        // red corruption growth
+        d[i] =
+          Math.min(
+            255,
+            original[s] + intensity*90
+          );
+
+
+        // dark infected channel
+        d[i+1] =
+          Math.max(
+            0,
+            original[s+1] - intensity*80
+          );
+
+
+        // neon purple/red glow
+        d[i+2] =
+          Math.min(
+            255,
+            original[s+2] + intensity*70
+          );
+
+
+        // glitch pixels
+        if(Math.random()<0.03+intensity*.08){
+
+          d[i]=255;
+          d[i+1]=0;
+          d[i+2]=120;
+
+        }
+
+      }
+
+    }
+
+
+    ctx.putImageData(img,0,0);
+
+
+    // scanline effect
+    ctx.fillStyle =
+      `rgba(255,0,80,${intensity*.08})`;
+
+    for(let y=0;y<h;y+=6){
+
+      ctx.fillRect(
+        0,
+        y,
+        w,
+        1
+      );
+
+    }
+
+
+    await new Promise(
+      r=>setTimeout(r,70)
+    );
+
+  }
+
+
+  // final corrupted overlay
+
+  ctx.globalCompositeOperation="screen";
+
+  ctx.fillStyle="rgba(255,0,80,.18)";
+  ctx.fillRect(0,0,w,h);
+
+
+  ctx.globalCompositeOperation="source-over";
+
+
+  document.getElementById('status').textContent =
+    "CORRUPTION COMPLETE";
+}
   ctx.putImageData(img,0,0);
   for(let i=0;i<30;i++){
     const y=Math.floor(Math.random()*h), sh=Math.floor(Math.random()*sliceH)+2;
