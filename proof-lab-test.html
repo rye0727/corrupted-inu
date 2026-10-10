@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C.I. Proof Lab — Signature Test</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#09070a;color:#f4edf1;
+font:16px/1.6 system-ui,sans-serif;padding:24px}
+main{max-width:760px;margin:40px auto}
+.kicker{color:#ff315c;letter-spacing:3px;font-size:12px}
+h1{font-size:clamp(30px,6vw,48px);line-height:1.1}
+p{color:#c9bdc4}
+.card{border:1px solid #4b2634;background:#120d12;
+padding:22px;border-radius:12px;margin:18px 0}
+button{background:#e51b50;color:white;border:0;border-radius:7px;
+padding:13px 18px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}
+.result{padding:12px;border-radius:7px;background:#20151c;
+white-space:pre-wrap;overflow-wrap:anywhere}
+.good{color:#76f0ac}.bad{color:#ff7088}
+small{color:#a99ba4}
+a{color:#ff7795}
+</style>
+</head>
+<body>
+<main>
+<div class="kicker">CORRUPTED INTELLIGENCE // PROOF LAB</div>
+<h1>Trust what can be verified.</h1>
+<p>
+A browser-based experiment with ML-DSA-65, a post-quantum
+digital signature algorithm standardized by NIST in FIPS 204.
+</p>
+
+<div class="card">
+<h2>Signature integrity test</h2>
+<p>
+The test creates a temporary key pair, signs a sample message,
+verifies the original, then changes the message and verifies again.
+</p>
+<button id="run">RUN VERIFICATION TEST</button>
+<p id="status" class="result" role="status" aria-live="polite">
+Ready. Run the test to begin.
+</p>
+<div id="results"></div>
+</div>
+
+<div class="card">
+<h3>What this test demonstrates</h3>
+<p>
+A valid signature can authenticate a particular message under a
+particular public key. Changing the signed message should cause
+verification to fail.
+</p>
+<small>
+Prototype only. This does not verify $CI token transactions,
+audit a blockchain, or make the token quantum-resistant.
+The temporary secret key is kept in memory and is not displayed
+or intentionally transmitted or stored by this page.
+</small>
+</div>
+
+<p>
+<a href="https://csrc.nist.gov/pubs/fips/204/final"
+target="_blank" rel="noopener noreferrer">
+Read NIST FIPS 204 ↗
+</a>
+</p>
+<p><small>Corrupted Inu · Corrupted Intelligence</small></p>
+</main>
+
+<script type="module">
+const runButton = document.getElementById('run');
+const statusBox = document.getElementById('status');
+const results = document.getElementById('results');
+
+function showResult(label, passed) {
+  const row = document.createElement('p');
+  row.className = 'result ' + (passed ? 'good' : 'bad');
+  row.textContent = label + ': ' + (passed ? 'PASS' : 'FAIL');
+  results.appendChild(row);
+}
+
+runButton.addEventListener('click', async () => {
+  runButton.disabled = true;
+  results.replaceChildren();
+  statusBox.textContent = 'Loading the cryptography library…';
+
+  try {
+    const { ml_dsa65 } = await import(
+      'https://esm.sh/@noble/post-quantum@0.7.1/ml-dsa.js'
+    );
+
+    statusBox.textContent = 'Generating a temporary key pair…';
+
+    // Secret key stays in memory for this test only.
+    const keys = ml_dsa65.keygen();
+    const encoder = new TextEncoder();
+    const original = encoder.encode(
+      'Corrupted Intelligence Proof Lab test message.'
+    );
+
+    statusBox.textContent = 'Signing and verifying the original…';
+    const signature = ml_dsa65.sign(original, keys.secretKey);
+    const originalValid = ml_dsa65.verify(
+      signature, original, keys.publicKey
+    );
+
+    // Change one character in the signed message.
+    const altered = encoder.encode(
+      'Corrupted Intelligence Proof Lab test messagE.'
+    );
+    const alteredValid = ml_dsa65.verify(
+      signature, altered, keys.publicKey
+    );
+
+    showResult('Original message signature', originalValid);
+    showResult('Modified message rejected', !alteredValid);
+
+    const allPassed = originalValid && !alteredValid;
+    statusBox.textContent = allPassed
+      ? 'TEST COMPLETE: BOTH CHECKS PASSED.'
+      : 'TEST INCOMPLETE: EXPECTED RESULTS WERE NOT BOTH OBTAINED.';
+
+    // Do not display or save the secret key or signature.
+  } catch (error) {
+    console.error(error);
+    statusBox.textContent =
+      'TEST ERROR: ' + String(error?.message || error) +
+      '\nCheck the internet connection and browser console.';
+  } finally {
+    runButton.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
