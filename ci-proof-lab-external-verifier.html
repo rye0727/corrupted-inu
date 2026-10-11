@@ -3,112 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>C.I. Proof Lab — External Signature Verifier</title>
 <style>
-:root{color-scheme:dark;--bg:#09070a;--panel:#120d12;--line:#4b2634;--red:#e51b50;--text:#f4edf1;--muted:#c9bdc4}
+:root{color-scheme:dark;--bg:#09070a;--panel:#151016;--line:#38202d;--text:#f4edf1;--muted:#b9aab4;--red:#ff3158}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,sans-serif;padding:22px}
-main{max-width:820px;margin:28px auto}
-.kicker{color:#ff315c;letter-spacing:3px;font-size:12px;font-weight:700}
-h1{font-size:clamp(30px,6vw,46px);line-height:1.1;margin:.35em 0}
+body{margin:0;background:radial-gradient(ellipse at top,#21101a 0%,var(--bg) 55%);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+main{width:min(900px,100%);margin:auto;padding:34px 20px 70px}
+.eyebrow{color:#ff6683;letter-spacing:2px;font-size:12px;font-weight:700}
+h1{font-size:clamp(30px,6vw,48px);line-height:1.1;margin:8px 0 12px}
+h2{font-size:20px;margin:0 0 14px}
 p{color:var(--muted)}
-.card{border:1px solid var(--line);background:var(--panel);padding:20px;border-radius:12px;margin:18px 0}
-label{display:block;font-weight:700;margin:16px 0 7px}
-textarea,select{display:block;width:100%;background:#09070a;color:var(--text);border:1px solid #684052;border-radius:7px;padding:12px;font:14px/1.5 ui-monospace,monospace}
+.panel{background:rgba(21,16,22,.94);border:1px solid var(--line);border-radius:14px;padding:22px;margin:22px 0}
+label{display:block;font-weight:650;margin:16px 0 7px}
+textarea,input,select{width:100%;background:#09070a;color:var(--text);border:1px solid #59404c;border-radius:8px;padding:12px;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
 textarea{min-height:100px;resize:vertical}
-#message{min-height:110px;font:15px/1.5 system-ui,sans-serif}
-button{background:var(--red);color:white;border:0;border-radius:7px;padding:13px 18px;font-weight:700;cursor:pointer;margin-top:18px}
+select{font-family:system-ui,sans-serif}
+button{border:0;border-radius:8px;padding:13px 17px;background:var(--red);color:white;font-weight:800;letter-spacing:.5px;cursor:pointer;margin:14px 8px 0 0}
+button.secondary{background:#30212b;border:1px solid #684053}
 button:disabled{opacity:.55;cursor:wait}
-.status{padding:14px;border-radius:7px;background:#20151c;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:16px}
-.good{border:1px solid #26764c;color:#76f0ac}
-.bad{border:1px solid #8b3148;color:#ff9bad}
-.note{font-size:13px;color:#b7a9b1}
-a{color:#ff7795}
+.status{white-space:pre-wrap;overflow-wrap:anywhere;background:#0c090d;border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:14px}
+.note{font-size:13px}
+a{color:#ff8299}
+hr{border:0;border-top:1px solid var(--line);margin:24px 0}
+@media(max-width:560px){main{padding:24px 14px 48px}.panel{padding:16px}}
 </style>
 </head>
 <body>
 <main>
-  <div class="kicker">CORRUPTED INTELLIGENCE // PROOF LAB</div>
+  <div class="eyebrow">CORRUPTED INTELLIGENCE // PROOF LAB</div>
   <h1>External Signature Verifier</h1>
   <p>Check whether an ML-DSA-65 signature matches a message and public key. This page verifies a signature; it does not establish who owns the public key or verify blockchain transactions.</p>
-  <section class="card">
+
+  <section class="panel">
     <h2>01 / Verification inputs</h2>
+    <p class="note">Choose the encoding used for the public key and signature. The message must match the originally signed bytes exactly; this form encodes the text as UTF-8.</p>
     <label for="message">Exact signed message</label>
-    <textarea id="message" placeholder="Paste the exact original message here. Spaces, punctuation, and line breaks matter."></textarea>
-    <label for="format">Public key and signature encoding</label>
-    <select id="format"><option value="base64">Base64</option><option value="hex">Hexadecimal</option></select>
+    <textarea id="message" placeholder="Enter the exact message that was signed"></textarea>
+    <label for="encoding">Public key and signature encoding</label>
+    <select id="encoding"><option value="base64">Base64</option><option value="hex">Hexadecimal</option></select>
     <label for="publicKey">ML-DSA-65 public key</label>
-    <textarea id="publicKey" spellcheck="false" placeholder="Paste the public key in the selected encoding."></textarea>
+    <textarea id="publicKey" placeholder="Paste public key"></textarea>
     <p class="note">Expected decoded size: 1,952 bytes for ML-DSA-65.</p>
     <label for="signature">ML-DSA-65 signature</label>
-    <textarea id="signature" spellcheck="false" placeholder="Paste the signature in the selected encoding."></textarea>
+    <textarea id="signature" placeholder="Paste signature"></textarea>
     <p class="note">Expected decoded size: 3,309 bytes for ML-DSA-65.</p>
     <button id="verify">VERIFY SIGNATURE</button>
+    <button id="selfTest" class="secondary">RUN SAFE SELF-TEST</button>
     <div id="status" class="status" role="status" aria-live="polite">Ready. Enter the exact message, public key, and signature.</div>
   </section>
-  <section class="card">
+
+  <section class="panel">
     <h2>02 / Important limitations</h2>
     <p>This prototype uses the Noble Post-Quantum JavaScript library, loaded from esm.sh over the internet. Inputs are processed in this browser page and are not intentionally sent to a Corrupted Inu server. The library itself is downloaded from the external module host.</p>
     <p>A valid signature means the supplied signature verifies for the supplied message and public key. It does not, by itself, prove the real-world identity of the signer. Never paste a secret/private key here.</p>
-    <p><a href="https://csrc.nist.gov/pubs/fips/204/final" target="_blank" rel="noopener noreferrer">Read NIST FIPS 204 (ML-DSA) ↗</a> · <a href="https://github.com/paulmillr/noble-post-quantum" target="_blank" rel="noopener noreferrer">Noble Post-Quantum source ↗</a></p>
+    <p><a href="https://csrc.nist.gov/pubs/fips/204/final" target="_blank" rel="noopener noreferrer">Read NIST FIPS 204 (ML-DSA)</a></p>
   </section>
 </main>
 <script type="module">
-const messageBox = document.getElementById('message');
-const formatBox = document.getElementById('format');
-const publicKeyBox = document.getElementById('publicKey');
-const signatureBox = document.getElementById('signature');
+const messageField = document.getElementById('message');
+const publicKeyField = document.getElementById('publicKey');
+const signatureField = document.getElementById('signature');
+const encodingField = document.getElementById('encoding');
 const verifyButton = document.getElementById('verify');
+const selfTestButton = document.getElementById('selfTest');
 const statusBox = document.getElementById('status');
+let libraryPromise;
 
-function decodeBytes(input, format, label) {
-  const value = input.trim();
-  if (!value) throw new Error('Please enter the ' + label + '.');
-  if (format === 'hex') {
-    const cleaned = value.replace(/\s+/g, '').replace(/^0x/i, '');
-    if (!/^[0-9a-f]*$/i.test(cleaned) || cleaned.length % 2 !== 0) {
-      throw new Error(label + ' must be valid hexadecimal (pairs of digits).');
-    }
-    const bytes = new Uint8Array(cleaned.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-      bytes[i] = Number.parseInt(cleaned.slice(i * 2, i * 2 + 2), 16);
-    }
-    return bytes;
+function decodeInput(value, encoding) {
+  const clean = value.trim().replace(/\s+/g, '');
+  if (!clean) throw new Error('Please fill in all three verification fields.');
+  if (encoding === 'hex') {
+    if (!/^(?:[0-9a-fA-F]{2})+$/.test(clean)) throw new Error('Hexadecimal data must contain complete byte pairs (0–9, A–F).');
+    const out = new Uint8Array(clean.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+    return out;
   }
-  const cleaned = value.replace(/\s+/g, '');
+  const normalized = clean.replace(/-/g, '+').replace(/_/g, '/');
   let binary;
-  try { binary = atob(cleaned); }
-  catch { throw new Error(label + ' must be valid Base64.'); }
+  try { binary = atob(normalized); } catch { throw new Error('Invalid Base64 input.'); }
   return Uint8Array.from(binary, ch => ch.charCodeAt(0));
 }
-
+function encodeBytes(bytes, encoding) {
+  if (encoding === 'hex') return Array.from(bytes, b => b.toString(16).padStart(2,'0')).join('');
+  let binary = '';
+  for (let i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+async function getLibrary() {
+  if (!libraryPromise) libraryPromise = import('https://esm.sh/@noble/post-quantum@0.7.1/ml-dsa.js');
+  return libraryPromise;
+}
+async function verifyCurrent() {
+  const { ml_dsa65 } = await getLibrary();
+  const message = new TextEncoder().encode(messageField.value);
+  const publicKey = decodeInput(publicKeyField.value, encodingField.value);
+  const signature = decodeInput(signatureField.value, encodingField.value);
+  if (publicKey.length !== 1952) throw new Error(`Public key size is ${publicKey.length} bytes; expected 1,952 bytes.`);
+  if (signature.length !== 3309) throw new Error(`Signature size is ${signature.length} bytes; expected 3,309 bytes.`);
+  return ml_dsa65.verify(signature, message, publicKey);
+}
 verifyButton.addEventListener('click', async () => {
   verifyButton.disabled = true;
-  statusBox.className = 'status';
-  statusBox.textContent = 'Loading the ML-DSA-65 verification library…';
+  selfTestButton.disabled = true;
+  statusBox.textContent = 'Loading cryptography library and checking signature…';
   try {
-    const { ml_dsa65 } = await import('https://esm.sh/@noble/post-quantum@0.7.1/ml-dsa.js');
-    const publicKey = decodeBytes(publicKeyBox.value, formatBox.value, 'public key');
-    const signature = decodeBytes(signatureBox.value, formatBox.value, 'signature');
-    const message = new TextEncoder().encode(messageBox.value);
-    if (publicKey.length !== 1952) {
-      throw new Error('The decoded public key is ' + publicKey.length + ' bytes. ML-DSA-65 expects 1,952 bytes. Check the selected encoding and copied data.');
-    }
-    if (signature.length !== 3309) {
-      throw new Error('The decoded signature is ' + signature.length + ' bytes. ML-DSA-65 expects 3,309 bytes. Check the selected encoding and copied data.');
-    }
-    statusBox.textContent = 'Checking signature…';
-    const valid = ml_dsa65.verify(signature, message, publicKey);
-    statusBox.className = 'status ' + (valid ? 'good' : 'bad');
+    const valid = await verifyCurrent();
     statusBox.textContent = valid
-      ? 'SIGNATURE VALID\nThe signature verifies for this exact message and public key. This does not independently establish the signer’s identity.'
-      : 'SIGNATURE INVALID\nThe signature did not verify for this message and public key. Check the exact message, key, signature, encoding, and signing options.';
+      ? 'SIGNATURE VALID: the signature matches the supplied message and public key.'
+      : 'SIGNATURE INVALID: the signature does not verify for the supplied message and public key.';
   } catch (error) {
-    statusBox.className = 'status bad';
-    statusBox.textContent = 'VERIFICATION ERROR\n' + String(error?.message || error) + '\nIf the library did not load, check your internet connection and browser console.';
-    console.error(error);
+    statusBox.textContent = 'VERIFICATION ERROR: ' + String(error?.message || error);
   } finally {
     verifyButton.disabled = false;
+    selfTestButton.disabled = false;
+  }
+});
+selfTestButton.addEventListener('click', async () => {
+  verifyButton.disabled = true;
+  selfTestButton.disabled = true;
+  statusBox.textContent = 'Running self-test with a temporary key pair…';
+  try {
+    const { ml_dsa65 } = await getLibrary();
+    const encoder = new TextEncoder();
+    const sample = 'Corrupted Intelligence Proof Lab self-test.';
+    const original = encoder.encode(sample);
+    const altered = encoder.encode('Corrupted Intelligence Proof Lab self-tesT.');
+    const keys = ml_dsa65.keygen();
+    const signature = ml_dsa65.sign(original, keys.secretKey);
+    const originalValid = ml_dsa65.verify(signature, original, keys.publicKey);
+    const alteredValid = ml_dsa65.verify(signature, altered, keys.publicKey);
+    messageField.value = sample;
+    publicKeyField.value = encodeBytes(keys.publicKey, encodingField.value);
+    signatureField.value = encodeBytes(signature, encodingField.value);
+    statusBox.textContent =
+      'SELF-TEST RESULTS\n' +
+      'Original message signature: ' + (originalValid ? 'PASS' : 'FAIL') + '\n' +
+      'Modified message rejected: ' + (!alteredValid ? 'PASS' : 'FAIL') + '\n\n' +
+      (originalValid && !alteredValid
+        ? 'Both basic checks passed. Temporary test values are now filled into the form; the secret key was not displayed or saved.'
+        : 'Self-test did not produce the expected results. Do not rely on this prototype.');
+  } catch (error) {
+    statusBox.textContent = 'SELF-TEST ERROR: ' + String(error?.message || error) + '\nCheck your internet connection and browser console.';
+  } finally {
+    verifyButton.disabled = false;
+    selfTestButton.disabled = false;
   }
 });
 </script>
