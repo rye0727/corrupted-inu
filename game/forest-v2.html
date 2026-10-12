@@ -61,7 +61,7 @@ function hash(x,y){let n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floo
 function say(s){$("message").textContent=s;messageTimer=200}
 function reset(){
 player={x:WW/2,y:WH/2+100,r:14,hp:100,maxHp:100,level:1,xp:0,attack:0,invuln:0};
-beasts=[];particles=[];familiars=0;worldTime=0;attackFlash=0;
+beasts=[];particles=[];familiars=0;worldTime=0;attackFlash=0;cam={x:0,y:0};
 for(let i=0;i<17;i++)spawnBeast(true);
 say("Signal acquired. Something moves between the trees.");
 updateHUD();
