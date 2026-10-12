@@ -142,44 +142,50 @@ rect(0,0,W,H,'#172a25');
 
 
 
- // Natural forest floor — richer pixel-art grass
- const tileSize = T;
- for(let y=0;y<H;y+=tileSize){
-  for(let x=0;x<W;x+=tileSize){
-   const wx=Math.floor((x+camera.x)/tileSize);
-   const wy=Math.floor((y+camera.y)/tileSize);
-   const n=Math.abs((wx*17+wy*31+wx*wy*7)%23);
 
+ // Natural forest floor — organic moss and grass
+ for(let y=0;y<H;y+=T){
+  for(let x=0;x<W;x+=T){
+   const wx=Math.floor((x+camera.x)/T);
+   const wy=Math.floor((y+camera.y)/T);
+   const n=Math.abs((wx*17+wy*31+wx*wy*7)%29);
+
+   // Small irregular moss patches — no full-tile squares
    if(n<8){
-    rect(x,y,tileSize,tileSize,'#1a3028');
-   }else if(n<15){
-    rect(x,y,tileSize,tileSize,'#1c352b');
-   }else{
-    rect(x,y,tileSize,tileSize,'#20382c');
+    rect(x+3,y+8,7,3,'#203b2d');
+    rect(x+6,y+6,4,2,'#254431');
+   }
+   if(n===3 || n===14 || n===22){
+    rect(x+17,y+21,8,3,'#243f30');
+    rect(x+20,y+19,4,2,'#2a4834');
    }
 
+   // Scattered grass blades
    if(n%2===0){
-    rect(x+5,y+7,4,2,'#34513a');
-    rect(x+8,y+5,2,4,'#2b4934');
+    rect(x+5,y+15,2,4,'#34513a');
+    rect(x+8,y+17,3,2,'#2d4935');
    }
    if(n%3===0){
-    rect(x+18,y+19,6,2,'#294632');
-    rect(x+21,y+16,2,4,'#304d36');
-   }
-   if(n%4===0){
-    rect(x+7,y+23,3,3,'#3a5439');
+    rect(x+22,y+5,2,4,'#304d36');
+    rect(x+24,y+8,4,2,'#38543a');
    }
    if(n%5===0){
-    rect(x+24,y+8,3,3,'#294631');
-    rect(x+23,y+7,2,2,'#3b573d');
+    rect(x+13,y+25,3,2,'#3a563d');
+    rect(x+15,y+23,2,3,'#304a34');
    }
 
-   if(n===6 || n===17){
-    rect(x+12,y+13,4,2,'#66513b');
-    rect(x+14,y+12,2,3,'#806044');
+   // Fallen leaves and tiny stones
+   if(n===6 || n===18){
+    rect(x+12,y+12,4,2,'#66513b');
+    rect(x+14,y+11,2,2,'#806044');
    }
+   if(n===11 || n===25){
+    rect(x+25,y+25,3,2,'#465047');
+   }
+
+   // Rare corrupted fragments
    if(n===9){
-    rect(x+12,y+12,4,4,'#70223f');
+    rect(x+12,y+12,3,3,'#70223f');
     rect(x+13,y+13,2,2,'#ff526d');
    }
   }
