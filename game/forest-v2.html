@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI: The Lost Signal — Forest V2</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080d10;color:#e9f5ee;font-family:monospace;display:flex;justify-content:center;min-height:100vh}
+main{width:min(100%,1000px);padding:14px}
+h1{font-size:clamp(18px,4vw,28px);letter-spacing:2px;margin:4px 0 10px;color:#ff6479}
+.sub{font-size:12px;color:#a9c1b5;margin-bottom:12px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.stat{background:#111e20;border:1px solid #29413b;border-radius:7px;padding:9px 12px;font-size:12px;flex:1;min-width:95px}
+.stat b{color:#ff8592}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;background:#142720;border:2px solid #40584c;border-radius:8px;image-rendering:pixelated;box-shadow:0 0 35px #000b}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{font-family:inherit;background:#172724;color:#e8fff1;border:1px solid #557365;border-radius:7px;padding:11px 14px;cursor:pointer;touch-action:manipulation}
+button:active{background:#7b2637}
+.help{font-size:12px;color:#a7bdb2;line-height:1.8;margin-top:12px}
+#message{color:#ff9ca8;min-height:18px;font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>CI: THE LOST SIGNAL</h1>
+<div class="sub">CORRUPTED INTELLIGENCE // FOREST PROTOTYPE V2</div>
+<div class="hud">
+<div class="stat">HP <b id="hp">100</b></div>
+<div class="stat">LEVEL <b id="level">1</b></div>
+<div class="stat">XP <b id="xp">0</b></div>
+<div class="stat">FAMILIARS <b id="fam">0</b></div>
+<div class="stat">SIGNAL <b id="signal">STABLE</b></div>
+</div>
+<canvas id="game" width="960" height="600"></canvas>
+<div id="message">The forest is listening...</div>
+<div class="controls">
+<button id="attack">⚔ ATTACK [SPACE]</button>
+<button id="capture">◎ CAPTURE [E]</button>
+<button id="recover">✚ RECOVER [Q]</button>
+<button id="reset">↻ RESTART</button>
+</div>
+<div class="help">
+<strong>CONTROLS</strong><br>
+WASD / Arrow keys: Move &nbsp; • &nbsp; Space: Attack<br>
+E: Capture weakened Glitch Pups &nbsp; • &nbsp; Q: Recover HP<br>
+Explore the forest, find corrupted creatures, and build your familiar collection.
+</div>
+</main>
+<script>
+(()=>{
+"use strict";
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+const W=canvas.width,H=canvas.height,WW=2400,WH=1900;
+const $=id=>document.getElementById(id);
+let keys={},player,beasts,particles,familiars,cam,worldTime,lastTime,attackFlash,messageTimer;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function hash(x,y){let n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
+function say(s){$("message").textContent=s;messageTimer=200}
+function reset(){
+player={x:WW/2,y:WH/2+100,r:14,hp:100,maxHp:100,level:1,xp:0,attack:0,invuln:0};
+beasts=[];particles=[];familiars=0;worldTime=0;attackFlash=0;
+for(let i=0;i<17;i++)spawnBeast(true);
+say("Signal acquired. Something moves between the trees.");
+updateHUD();
+}
+function spawnBeast(initial=false){
+let x,y;
+for(let tries=0;tries<100;tries++){
+x=rand(100,WW-100);y=rand(100,WH-100);
+if(Math.hypot(x-player.x,y-player.y)>(initial?230:300))break;
+}
+beasts.push({x,y,r:13,hp:3,maxHp:3,phase:rand(0,7),speed:rand(22,38),cool:rand(0,2),dead:false});
+}
+function updateHUD(){
+$("hp").textContent=Math.ceil(player.hp)+"/"+player.maxHp;
+$("level").textContent=player.level;
+$("xp").textContent=player.xp;
+$("fam").textContent=familiars;
+$("signal").textContent=beasts.some(b=>!b.dead&&b.hp< b.maxHp)?"DISRUPTED":"STABLE";
+}
+function pathAt(x,y){
+const center=WW*.5+Math.sin(y*.0032)*145+Math.sin(y*.008)*35;
+const width=205+Math.sin(y*.006+1)*22;
+return Math.abs(x-center)<width/2;
+}
+function trailCenter(y){return WW*.5+Math.sin(y*.0032)*145+Math.sin(y*.008)*35}
+function grassColor(x,y){
+let n=hash(Math.floor(x/42),Math.floor(y/42));
+return n>.76?"#35583d":n>.42?"#294b35":n>.18?"#234330":"#1e3a2e";
+}
+function drawGround(){
+ctx.fillStyle="#203d2e";ctx.fillRect(0,0,W,H);
+let sx=Math.floor(cam.x/42)*42,sy=Math.floor(cam.y/42)*42;
+for(let y=sy;y<cam.y+H+42;y+=42){
+for(let x=sx;x<cam.x+W+42;x+=42){
+let n=hash(Math.floor(x/42),Math.floor(y/42));
+ctx.fillStyle=grassColor(x,y);
+ctx.fillRect(x-cam.x,y-cam.y,43,43);
+if(n>.34){
+ctx.fillStyle=n>.78?"#54734a":"#304f36";
+ctx.fillRect(x-cam.x+5+n*20,y-cam.y+7,2,3);
+ctx.fillRect(x-cam.x+24,y-cam.y+21+n*8,3,2);
+}
+if(n>.88){
+ctx.fillStyle="#81945a";
+ctx.fillRect(x-cam.x+13,y-cam.y+26,2,4);
+ctx.fillRect(x-cam.x+16,y-cam.y+23,2,5);
+}
+}
+}
+// Broad winding path with layered natural edges
+for(let y=sy-50;y<cam.y+H+60;y+=8){
+let center=trailCenter(y),screenY=y-cam.y;
+let w=220+Math.sin(y*.006+1)*25;
+ctx.fillStyle="#263c2e";
+ctx.fillRect(center-w/2-15-cam.x,screenY, w+30,10);
+ctx.fillStyle="#66513b";
+ctx.fillRect(center-w/2-cam.x,screenY,w,10);
+ctx.fillStyle="#796044";
+ctx.fillRect(center-w/2+8-cam.x,screenY,w-16,8);
+ctx.fillStyle="#8a6c49";
+ctx.fillRect(center-w/2+26-cam.x,screenY,Math.max(0,w-52),3);
+}
+}
+function drawTree(x,y,size,seed){
+let X=x-cam.x,Y=y-cam.y;
+if(X<-size*2||X>W+size*2||Y<-size*2||Y>H+size*2)return;
+ctx.fillStyle="#14241d";
+ctx.beginPath();ctx.ellipse(X,Y+size*.43,size*.72,size*.31,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#4a3526";
+ctx.fillRect(X-size*.14,Y-size*.02,size*.28,size*.62);
+ctx.fillStyle="#62452d";
+ctx.fillRect(X-size*.05,Y+size*.03,size*.1,size*.44);
+let layers=[
+{dx:0,dy:-.38,r:1,c:"#193b2a"},
+{dx:-.38,dy:-.1,r:.78,c:"#245036"},
+{dx:.35,dy:-.13,r:.8,c:"#2b5b39"},
+{dx:-.12,dy:-.57,r:.72,c:"#376642"},
+{dx:.19,dy:-.43,r:.7,c:"#315b39"},
+{dx:0,dy:-.28,r:.53,c:"#417148"}
+];
+for(let l of layers){
+ctx.fillStyle=l.c;
+ctx.beginPath();ctx.ellipse(X+size*l.dx,Y+size*l.dy,size*l.r,size*l.r*.77,0,0,Math.PI*2);ctx.fill();
+}
+ctx.fillStyle="#527c48";
+ctx.beginPath();ctx.ellipse(X-size*.14,Y-size*.58,size*.23,size*.13,-.4,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#152d23";
+ctx.fillRect(X+size*.12,Y-size*.26,3,4);
+}
+function drawRock(x,y,s){
+let X=x-cam.x,Y=y-cam.y;
+if(X<-s-10||X>W+s+10||Y<-s-10||Y>H+s+10)return;
+ctx.fillStyle="#172b25";ctx.beginPath();ctx.ellipse(X,Y+s*.4,s*1.1,s*.5,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#64756a";ctx.beginPath();ctx.moveTo(X-s,Y);ctx.lineTo(X-s*.4,Y-s*.75);ctx.lineTo(X+s*.5,Y-s*.8);ctx.lineTo(X+s,Y);ctx.lineTo(X+s*.5,Y+s*.25);ctx.lineTo(X-s*.6,Y+s*.2);ctx.closePath();ctx.fill();
+ctx.fillStyle="#8b9a88";ctx.beginPath();ctx.moveTo(X-s*.4,Y-s*.75);ctx.lineTo(X+s*.5,Y-s*.8);ctx.lineTo(X+s*.05,Y-s*.25);ctx.lineTo(X-s*.6,Y-s*.22);ctx.closePath();ctx.fill();
+}
+function drawCorruption(x,y,r,t){
+let X=x-cam.x,Y=y-cam.y;
+if(X<-r-50||X>W+r+50||Y<-r-50||Y>H+r+50)return;
+let g=ctx.createRadialGradient(X,Y,2,X,Y,r);
+g.addColorStop(0,"#ff24442b");g.addColorStop(.55,"#d4163620");g.addColorStop(1,"#c20e1800");
+ctx.fillStyle=g;ctx.beginPath();ctx.arc(X,Y,r,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle="#f12d514f";ctx.lineWidth=2;
+ctx.beginPath();ctx.arc(X,Y,r*.53+Math.sin(t*2+x)*4,t*.3,t*.3+Math.PI*1.6);ctx.stroke();
+ctx.strokeStyle="#ff405d55";ctx.lineWidth=3;
+ctx.beginPath();ctx.moveTo(X-r*.25,Y-r*.4);ctx.lineTo(X-r*.05,Y-r*.1);ctx.lineTo(X-r*.28,Y+r*.14);ctx.lineTo(X+r*.1,Y+r*.05);ctx.lineTo(X+r*.28,Y+r*.4);ctx.stroke();
+}
+function drawWorld(){
+drawGround();
+for(let i=0;i<10;i++){
+let x=180+hash(i*9,2)*2040,y=130+hash(i*3,5)*1640;
+drawCorruption(x,y,100+hash(i,8)*80,worldTime);
+}
+// Ground objects placed deterministically throughout the world
+for(let i=0;i<230;i++){
+let x=hash(i,12)*WW,y=hash(i,31)*WH;
+if(pathAt(x,y))continue;
+if(hash(i,17)>.48)drawRock(x,y,5+hash(i,6)*9);
+else{
+let X=x-cam.x,Y=y-cam.y;
+if(X>-20&&X<W+20&&Y>-20&&Y<H+20){
+ctx.strokeStyle=hash(i,9)>.5?"#759050":"#476b42";
+ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X,Y+4);ctx.lineTo(X-3,Y-3);ctx.moveTo(X,Y+4);ctx.lineTo(X+4,Y-2);ctx.stroke();
+}
+}
+}
+// Trees grow along the forest edges and deep woods
+for(let i=0;i<280;i++){
+let x=hash(i,45)*WW,y=hash(i,67)*WH;
+if(pathAt(x,y)&&hash(i,22)>.9)continue;
+drawTree(x,y,18+hash(i,90)*28,i);
+}
+}
+function drawBeast(b){
+let X=b.x-cam.x,Y=b.y-cam.y;
+if(X<-50||X>W+50||Y<-50||Y>H+50)return;
+ctx.fillStyle="#09100edb";ctx.beginPath();ctx.ellipse(X,Y+12,19,8,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#a92842";ctx.beginPath();ctx.ellipse(X,Y,15,12,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#db4158";ctx.beginPath();ctx.ellipse(X-3,Y-4,10,7,-.2,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#7c203a";ctx.beginPath();ctx.moveTo(X-10,Y-6);ctx.lineTo(X-15,Y-20);ctx.lineTo(X-3,Y-12);ctx.fill();
+ctx.beginPath();ctx.moveTo(X+7,Y-8);ctx.lineTo(X+15,Y-17);ctx.lineTo(X+14,Y-3);ctx.fill();
+ctx.fillStyle="#ffb2bd";ctx.fillRect(X-8,Y-2,4,4);ctx.fillRect(X+5,Y-2,4,4);
+ctx.fillStyle="#17141d";ctx.fillRect(X-7,Y-1,2,3);ctx.fillRect(X+6,Y-1,2,3);
+ctx.fillStyle="#160e16";ctx.fillRect(X-4,Y+5,9,2);
+ctx.fillStyle="#130f15";ctx.fillRect(X-17,Y-25,34,5);
+ctx.fillStyle="#ff4c69";ctx.fillRect(X-17,Y-25,34*(b.hp/b.maxHp),5);
+}
+function drawPlayer(){
+let X=player.x-cam.x,Y=player.y-cam.y;
+ctx.fillStyle="#0b100edb";ctx.beginPath();ctx.ellipse(X,Y+14,18,8,0,0,Math.PI*2);ctx.fill();
+if(player.invuln>0&&Math.floor(worldTime*12)%2===0)return;
+ctx.fillStyle="#d8b88c";ctx.fillRect(X-9,Y-5,18,15);
+ctx.fillStyle="#dcae7a";ctx.fillRect(X-11,Y-13,22,14);
+ctx.fillStyle="#f0c89a";ctx.fillRect(X-7,Y-15,14,7);
+ctx.fillStyle="#e8e1ce";ctx.fillRect(X-12,Y-17,7,8);ctx.fillRect(X+5,Y-17,7,8);
+ctx.fillStyle="#202b25";ctx.fillRect(X-7,Y-8,4,4);ctx.fillRect(X+4,Y-8,4,4);
+ctx.fillStyle="#a81f3a";ctx.fillRect(X-10,Y+4,20,9);
+ctx.fillStyle="#f05b70";ctx.fillRect(X-10,Y+4,20,3);
+ctx.fillStyle="#e4e8d5";ctx.fillRect(X-8,Y+13,6,5);ctx.fillRect(X+3,Y+13,6,5);
+if(player.attack>0){
+ctx.strokeStyle="#fff1c5";ctx.lineWidth=4;ctx.beginPath();ctx.arc(X,Y,38,-1.4,1.1);ctx.stroke();
+ctx.strokeStyle="#ff526b";ctx.lineWidth=2;ctx.beginPath();ctx.arc(X,Y,43,-1.3,1.2);ctx.stroke();
+}
+}
+function puff(x,y,color){
+for(let i=0;i<9;i++)particles.push({x,y,vx:rand(-65,65),vy:rand(-70,30),life:rand(.25,.65),max:.65,color,size:rand(2,5)});
+}
+function drawParticles(dt){
+for(let i=particles.length-1;i>=0;i--){
+let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+if(p.life<=0){particles.splice(i,1);continue}
+ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.fillRect(p.x-cam.x,p.y-cam.y,p.size,p.size);
+}
+ctx.globalAlpha=1;
+}
+function attack(){
+if(player.attack>0)return;
+player.attack=.22;attackFlash=.22;
+let hit=0;
+for(let b of beasts){
+if(b.dead||Math.hypot(b.x-player.x,b.y-player.y)>67)continue;
+b.hp--;hit++;puff(b.x,b.y,"#ff526b");
+if(b.hp<=0){
+b.dead=true;player.xp+=15;say("Glitch Pup defeated. +15 XP");
+if(player.xp>=player.level*50){player.xp-=player.level*50;player.level++;player.maxHp+=10;player.hp=player.maxHp;say("LEVEL UP! Signal strength increased.");}
+}else say("Hit confirmed. The corruption is weakening.");
+}
+if(!hit)say("Attack missed. Move closer to a Glitch Pup.");
+updateHUD();
+}
+function capture(){
+let b=beasts.filter(b=>!b.dead&&b.hp<=1&&Math.hypot(b.x-player.x,b.y-player.y)<90).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
+if(!b){say("Weaken a nearby Glitch Pup before capturing it.");return}
+b.dead=true;familiars++;player.xp+=10;puff(b.x,b.y,"#ff91b0");say("FAMILIAR CAPTURED! The signal grows stronger.");
+updateHUD();
+}
+function recover(){
+if(player.hp>=player.maxHp){say("HP is already full.");return}
+player.hp=Math.min(player.maxHp,player.hp+25);say("Signal restored. Recovered 25 HP.");updateHUD();
+}
+function move(dt){
+let dx=0,dy=0;
+if(keys.w||keys.ArrowUp)dy--;
+if(keys.s||keys.ArrowDown)dy++;
+if(keys.a||keys.ArrowLeft)dx--;
+if(keys.d||keys.ArrowRight)dx++;
+if(dx||dy){let m=Math.hypot(dx,dy);dx/=m;dy/=m}
+let speed=player.level>=3?205:180;
+let nx=clamp(player.x+dx*speed*dt,25,WW-25),ny=clamp(player.y+dy*speed*dt,25,WH-25);
+player.x=nx;player.y=ny;
+for(let b of beasts){
+if(b.dead)continue;
+b.phase+=dt;
+let d=Math.hypot(player.x-b.x,player.y-b.y);
+if(d<270&&d>28){
+b.x+=(player.x-b.x)/d*b.speed*dt;b.y+=(player.y-b.y)/d*b.speed*dt;
+}else if(d<=28&&player.invuln<=0){
+player.hp=Math.max(0,player.hp-8);player.invuln=.7;puff(player.x,player.y,"#e64b60");say("The Glitch Pup struck you!");
+updateHUD();
+}
+}
+}
+function frame(ts){
+let dt=Math.min(.035,(ts-(lastTime||ts))/1000);lastTime=ts;worldTime+=dt;
+if(player.attack>0)player.attack=Math.max(0,player.attack-dt);
+if(player.invuln>0)player.invuln-=dt;
+if(attackFlash>0)attackFlash-=dt;
+if(messageTimer>0)messageTimer-=dt*60;
+move(dt);
+cam.x=clamp(player.x-W/2,0,WW-W);cam.y=clamp(player.y-H/2,0,WH-H);
+ctx.clearRect(0,0,W,H);
+drawWorld();
+for(let b of beasts)if(!b.dead)drawBeast(b);
+drawPlayer();drawParticles(dt);
+// Cinematic edge shading
+let v=ctx.createRadialGradient(W/2,H/2,100,W/2,H/2,600);
+v.addColorStop(0,"#00000000");v.addColorStop(1,"#020708b8");
+ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+// Subtle signal scanlines
+ctx.fillStyle="#d5ffe405";
+for(let y=0;y<H;y+=5)ctx.fillRect(0,y,W,1);
+if(beasts.filter(b=>!b.dead).length<7&&beasts.length<26&&Math.random()<.012)spawnBeast();
+if(player.hp<=0){
+ctx.fillStyle="#05080ddd";ctx.fillRect(0,0,W,H);
+ctx.textAlign="center";ctx.fillStyle="#ff627b";ctx.font="bold 36px monospace";ctx.fillText("SIGNAL LOST",W/2,H/2);
+ctx.fillStyle="#e8f5ed";ctx.font="16px monospace";ctx.fillText("Press RESTART to try again",W/2,H/2+35);
+}
+requestAnimationFrame(frame);
+}
+window.addEventListener("keydown",e=>{
+let k=e.key.length===1?e.key.toLowerCase():e.key;
+if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();
+keys[k]=true;
+if(e.repeat)return;
+if(e.code==="Space")attack();
+if(k==="e")capture();
+if(k==="q")recover();
+});
+window.addEventListener("keyup",e=>{let k=e.key.length===1?e.key.toLowerCase():e.key;keys[k]=false});
+$("attack").onclick=attack;$("capture").onclick=capture;$("recover").onclick=recover;
+$("reset").onclick=()=>{reset();lastTime=0};
+let touchStart=null;
+canvas.addEventListener("touchstart",e=>{
+if(e.touches.length){touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};}
+},{passive:true});
+canvas.addEventListener("touchmove",e=>{
+if(!touchStart||!e.touches.length)return;
+let t=e.touches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;
+keys.w=dy<-12;keys.s=dy>12;keys.a=dx<-12;keys.d=dx>12;
+},{passive:true});
+canvas.addEventListener("touchend",()=>{touchStart=null;keys.w=keys.a=keys.s=keys.d=false},{passive:true});
+reset();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
