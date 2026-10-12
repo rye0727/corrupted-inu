@@ -195,6 +195,43 @@ rect(0,0,W,H,'#172a25');
 
 
 
+ // Winding forest trail
+ ctx.save();
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+
+ ctx.beginPath();
+ ctx.moveTo(40-camera.x, 560-camera.y);
+ ctx.bezierCurveTo(
+  210-camera.x, 490-camera.y,
+  110-camera.x, 370-camera.y,
+  300-camera.x, 320-camera.y
+ );
+ ctx.bezierCurveTo(
+  470-camera.x, 275-camera.y,
+  370-camera.x, 165-camera.y,
+  560-camera.x, 130-camera.y
+ );
+ ctx.bezierCurveTo(
+  700-camera.x, 100-camera.y,
+  720-camera.x, 250-camera.y,
+  900-camera.x, 220-camera.y
+ );
+
+ ctx.strokeStyle='#493c32';
+ ctx.lineWidth=48;
+ ctx.stroke();
+
+ ctx.strokeStyle='#66503a';
+ ctx.lineWidth=36;
+ ctx.stroke();
+
+ ctx.strokeStyle='#786044';
+ ctx.lineWidth=2;
+ ctx.setLineDash([3,13]);
+ ctx.stroke();
+ ctx.restore();
+
  // Corrupted signal zones
  for(let i=0;i<5;i++){
  let x=250+i*270-camera.x,y=190+i*190-camera.y;
