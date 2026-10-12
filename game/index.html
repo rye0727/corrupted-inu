@@ -135,13 +135,28 @@ function drawBeast(){
  rect(x-18,y-34,36*Math.max(0,beast.hp/beast.max),4,'#ff416a');
 }
 function drawWorld(){
- rect(0,0,W,H,'#172a25');
- for(let y=0;y<H;y+=T)for(let x=0;x<W;x+=T){
- let wx=Math.floor((x+camera.x)/T),wy=Math.floor((y+camera.y)/T);
- let n=(wx*17+wy*31+wx*wy*7)%9;
- if(n===0)rect(x,y,2,2,'#20382d');
- if(n===3)rect(x+20,y+18,3,2,'#20372c');
+
+rect(0,0,W,H,'#172a25');
+
+// Natural forest floor with world-aligned pixel details
+for(let y=0;y<H;y+=T){
+ for(let x=0;x<W;x+=T){
+  let wx=Math.floor((x+camera.x)/T);
+  let wy=Math.floor((y+camera.y)/T);
+  let n=Math.abs((wx*17+wy*31+wx*wy*7)%17);
+
+  if(n===0)rect(x+5,y+7,14,3,'#1d352b');
+  if(n===1)rect(x+18,y+20,5,3,'#254032');
+  if(n===2)rect(x+7,y+24,3,3,'#304633');
+  if(n===3)rect(x+23,y+6,3,5,'#203b2e');
+
+  if(n===4){
+   rect(x+12,y+12,3,3,'#57233c');
+   rect(x+13,y+13,1,1,'#ff526d');
+  }
  }
+}
+
  // Corrupted signal zones
  for(let i=0;i<5;i++){
  let x=250+i*270-camera.x,y=190+i*190-camera.y;
