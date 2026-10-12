@@ -195,42 +195,62 @@ rect(0,0,W,H,'#172a25');
 
 
 
- // Winding forest trail
+
+ // Narrow winding forest footpath
  ctx.save();
  ctx.lineCap='round';
  ctx.lineJoin='round';
 
  ctx.beginPath();
- ctx.moveTo(40-camera.x, 560-camera.y);
+ ctx.moveTo(40-camera.x,560-camera.y);
  ctx.bezierCurveTo(
-  210-camera.x, 490-camera.y,
-  110-camera.x, 370-camera.y,
-  300-camera.x, 320-camera.y
+  210-camera.x,510-camera.y,
+  120-camera.x,390-camera.y,
+  300-camera.x,350-camera.y
  );
  ctx.bezierCurveTo(
-  470-camera.x, 275-camera.y,
-  370-camera.x, 165-camera.y,
-  560-camera.x, 130-camera.y
+  430-camera.x,325-camera.y,
+  390-camera.x,210-camera.y,
+  560-camera.x,175-camera.y
  );
  ctx.bezierCurveTo(
-  700-camera.x, 100-camera.y,
-  720-camera.x, 250-camera.y,
-  900-camera.x, 220-camera.y
+  700-camera.x,145-camera.y,
+  735-camera.x,260-camera.y,
+  900-camera.x,245-camera.y
  );
 
- ctx.strokeStyle='#493c32';
- ctx.lineWidth=48;
+ // Soft, irregular dark earth edges
+ ctx.strokeStyle='#29382c';
+ ctx.lineWidth=34;
  ctx.stroke();
 
- ctx.strokeStyle='#66503a';
- ctx.lineWidth=36;
+ // Main dirt trail
+ ctx.strokeStyle='#514333';
+ ctx.lineWidth=26;
  ctx.stroke();
 
- ctx.strokeStyle='#786044';
- ctx.lineWidth=2;
- ctx.setLineDash([3,13]);
+ // Warm earth down the center
+ ctx.strokeStyle='#66513a';
+ ctx.lineWidth=18;
  ctx.stroke();
+
  ctx.restore();
+
+ // Moss and small stones along the trail
+ for(let i=0;i<34;i++){
+  const wx=55+i*25;
+  const wy=430-Math.sin(i*0.32)*125+i*2;
+  const sx=wx-camera.x;
+  const sy=wy-camera.y;
+
+  if(i%3===0){
+   rect(sx,sy,5,3,'#38513a');
+   rect(sx+3,sy-2,3,2,'#456044');
+  }
+  if(i%5===0){
+   rect(sx+8,sy+5,3,3,'#78664b');
+  }
+ }
 
  // Corrupted signal zones
  for(let i=0;i<5;i++){
