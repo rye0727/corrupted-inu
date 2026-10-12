@@ -152,9 +152,9 @@ function drawWorld(){
  obstacles.sort((a,b)=>a.y-b.y);
  for(const o of obstacles)drawTree(o);
  drawBeast();drawPlayer();
- // scanline effect
- ctx.fillStyle='rgba(0,0,0,.09)';
- for(let y=0;y<H;y+=4)rect(0,y,W,1,'#000');
+ // subtle scanline effect
+ctx.fillStyle='rgba(0,0,0,.035)';
+for(let y=0;y<H;y+=6)rect(0,y,W,1,'#000');
  // location label
  rect(8,8,160,22,'rgba(5,7,10,.8)');
  ctx.fillStyle='#ff8ba2';ctx.font='11px monospace';ctx.textAlign='left';
