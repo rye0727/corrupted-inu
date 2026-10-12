@@ -1,1 +1,250 @@
 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI: The Lost Signal</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#08090d;color:#f4f1f5;font-family:monospace}
+header{padding:14px 16px;background:#111016;border-bottom:1px solid #642334}
+header strong{color:#ff526d;font-size:18px;letter-spacing:2px}
+header small{display:block;color:#aaa;margin-top:5px}
+main{max-width:1000px;margin:auto;padding:14px}
+.hud{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:#ffb5c0}
+.screen{position:relative;border:2px solid #69283d;background:#111;overflow:hidden}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:none}
+#message{padding:12px;background:#15121a;border:1px solid #34212d;margin-top:10px;min-height:42px;color:#ddd;font-size:12px;line-height:1.6}
+.controls{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,48px);gap:5px;justify-content:center;margin:15px auto}
+.controls button,.actions button{background:#20131d;border:1px solid #843449;color:#fff;padding:10px;cursor:pointer;font-family:monospace}
+.controls button{font-size:18px}
+.controls button:active,.actions button:active{background:#8d2745}
+.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.actions button{min-width:110px}
+.help{text-align:center;color:#999;font-size:11px;line-height:1.8;margin-top:15px}
+</style>
+</head>
+<body>
+<header>
+<strong>CI // THE LOST SIGNAL</strong>
+<small>CORRUPTED INTELLIGENCE — FIELD TEST 001</small>
+</header>
+<main>
+<div class="hud">
+<span id="hp">HP: 100 / 100</span>
+<span id="level">LEVEL: 01</span>
+<span id="count">FAMILIARS: 0</span>
+</div>
+<div class="screen">
+<canvas id="game" width="640" height="400"></canvas>
+</div>
+<div id="message" role="status">SIGNAL DETECTED. Explore the forest and locate the corrupted creature.</div>
+
+<div class="controls">
+<span></span><button data-key="ArrowUp">▲</button><span></span>
+<button data-key="ArrowLeft">◀</button>
+<button data-key="ArrowDown">▼</button>
+<button data-key="ArrowRight">▶</button>
+</div>
+<div class="actions">
+<button id="attack">ATTACK [SPACE]</button>
+<button id="capture">CAPTURE [E]</button>
+<button id="heal">RECOVER [Q]</button>
+</div>
+<div class="help">
+MOVE: WASD / ARROW KEYS · ATTACK: SPACE · CAPTURE: E · RECOVER: Q<br>
+Prototype 001 — Progress is stored for this session only.
+</div>
+</main>
+<script>
+(()=>{
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+const W=640,H=400,T=32;
+const keys={};
+const world={w:1800,h:1400};
+const player={x:120,y:120,hp:100,max:100,level:1,xp:0,familiars:0,dir:0};
+const beast={x:410,y:260,hp:60,max:60,alive:true,captured:false,attackWait:0};
+let camera={x:0,y:0};
+let last=0,walk=0,flash=0;
+let message='SIGNAL DETECTED. Explore the forest and locate the corrupted creature.';
+const obstacles=[];
+let seed=728;
+function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+for(let i=0;i<210;i++){
+ let x=rand()*(world.w-60)+30,y=rand()*(world.h-60)+30;
+ if(Math.hypot(x-120,y-120)<100||Math.hypot(x-410,y-260)<75)continue;
+ obstacles.push({x,y,r:9+rand()*9,type:rand()>.25?'tree':'rock'});
+}
+function say(s){message=s;document.getElementById('message').textContent=s}
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)}
+function box(x,y,w,h,c){rect(x-camera.x,y-camera.y,w,h,c)}
+function drawTree(o){
+ let x=o.x-camera.x,y=o.y-camera.y;
+ if(x<-30||x>W+30||y<-40||y>H+40)return;
+ if(o.type==='tree'){
+ rect(x-11,y-2,22,20,'#182e27');
+ rect(x-8,y-12,16,17,'#244537');
+ rect(x-5,y-17,10,9,'#315642');
+ rect(x-3,y+13,6,8,'#61452e');
+ rect(x-8,y-6,4,4,'#4c6c48');
+ }else{
+ rect(x-10,y-3,20,12,'#333443');
+ rect(x-6,y-9,13,8,'#454657');
+ rect(x-5,y+3,10,3,'#252633');
+ }
+}
+function drawPlayer(){
+ const x=Math.round(player.x-camera.x),y=Math.round(player.y-camera.y);
+ rect(x-7,y+7,14,8,'#111018');
+ rect(x-7,y+1,14,12,'#a52e50');
+ rect(x-5,y-7,10,10,'#e9b5a1');
+ rect(x-8,y-11,5,7,'#b94c5e');
+ rect(x+3,y-11,5,7,'#b94c5e');
+ rect(x-5,y-13,10,5,'#27232d');
+ rect(x-4,y-4,3,3,'#ff526d');
+ rect(x+2,y-4,3,3,'#ff526d');
+ rect(x-5,y+12,4,5,'#ddd3e3');
+ rect(x+2,y+12,4,5,'#ddd3e3');
+ if(flash>0){ctx.strokeStyle='#ff5578';ctx.strokeRect(x-13,y-17,26,35)}
+}
+function drawBeast(){
+ if(!beast.alive)return;
+ const x=Math.round(beast.x-camera.x),y=Math.round(beast.y-camera.y);
+ if(x<-40||x>W+40||y<-40||y>H+40)return;
+ ctx.fillStyle='rgba(255,30,90,.15)';
+ ctx.beginPath();ctx.arc(x,y,31+Math.sin(walk/8)*3,0,Math.PI*2);ctx.fill();
+ rect(x-13,y+8,26,11,'#261329');
+ rect(x-12,y-5,24,17,'#b52d56');
+ rect(x-11,y-13,8,12,'#e94c70');
+ rect(x+3,y-13,8,12,'#e94c70');
+ rect(x-10,y-8,20,15,'#d83b63');
+ rect(x-7,y-3,4,4,'#fff0dc');
+ rect(x+3,y-3,4,4,'#fff0dc');
+ rect(x-7,y-2,3,3,'#ff174f');
+ rect(x+3,y-2,3,3,'#ff174f');
+ rect(x-5,y+5,10,3,'#44112c');
+ rect(x-10,y+15,6,5,'#6f254a');
+ rect(x+4,y+15,6,5,'#6f254a');
+ ctx.fillStyle='#e9dce5';ctx.font='10px monospace';ctx.textAlign='center';
+ ctx.fillText('GLITCH PUP',x,y-26);
+ rect(x-18,y-34,36,4,'#311923');
+ rect(x-18,y-34,36*Math.max(0,beast.hp/beast.max),4,'#ff416a');
+}
+function drawWorld(){
+ rect(0,0,W,H,'#172a25');
+ for(let y=0;y<H;y+=T)for(let x=0;x<W;x+=T){
+ let wx=Math.floor((x+camera.x)/T),wy=Math.floor((y+camera.y)/T);
+ let n=(wx*17+wy*31+wx*wy*7)%9;
+ if(n===0)rect(x,y,2,2,'#20382d');
+ if(n===3)rect(x+20,y+18,3,2,'#20372c');
+ }
+ // Corrupted signal zones
+ for(let i=0;i<5;i++){
+ let x=250+i*270-camera.x,y=190+i*190-camera.y;
+ ctx.fillStyle='rgba(195,20,70,.09)';
+ ctx.beginPath();ctx.arc(x,y,65,0,Math.PI*2);ctx.fill();
+ rect(x-3,y-3,6,6,'#852747');
+ }
+ obstacles.sort((a,b)=>a.y-b.y);
+ for(const o of obstacles)drawTree(o);
+ drawBeast();drawPlayer();
+ // scanline effect
+ ctx.fillStyle='rgba(0,0,0,.09)';
+ for(let y=0;y<H;y+=4)rect(0,y,W,1,'#000');
+ // location label
+ rect(8,8,160,22,'rgba(5,7,10,.8)');
+ ctx.fillStyle='#ff8ba2';ctx.font='11px monospace';ctx.textAlign='left';
+ ctx.fillText('SECTOR 01 // LOST FOREST',14,23);
+}
+function updateHUD(){
+ document.getElementById('hp').textContent=`HP: ${player.hp} / ${player.max}`;
+ document.getElementById('level').textContent=`LEVEL: ${String(player.level).padStart(2,'0')} · XP: ${player.xp}`;
+ document.getElementById('count').textContent=`FAMILIARS: ${player.familiars}`;
+}
+function collide(x,y){
+ for(const o of obstacles){
+ if(Math.hypot(x-o.x,y-o.y)<o.r+9)return true;
+ }
+ return false;
+}
+function move(dx,dy){
+ let nx=Math.max(12,Math.min(world.w-12,player.x+dx));
+ let ny=Math.max(12,Math.min(world.h-12,player.y+dy));
+ if(!collide(nx,player.y))player.x=nx;
+ if(!collide(player.x,ny))player.y=ny;
+ if(dx||dy)player.dir=Math.atan2(dy,dx);
+}
+function attack(){
+ if(!beast.alive){say('No active target. Explore to find your next signal.');return}
+ if(Math.hypot(player.x-beast.x,player.y-beast.y)>64){
+ say('TARGET OUT OF RANGE. Move closer to the Glitch Pup.');return;
+ }
+ const damage=12+player.level*3;
+ beast.hp=Math.max(0,beast.hp-damage);
+ flash=8;
+ say(`SIGNAL STRIKE! You dealt ${damage} damage. Target integrity: ${beast.hp}/${beast.max}.`);
+ if(beast.hp===0){
+ beast.alive=false;player.xp+=25;
+ if(player.xp>=50){player.xp-=50;player.level++;player.max+=10;player.hp=player.max;say('TARGET DEFEATED! LEVEL UP! Your maximum HP increased.');}
+ else say('TARGET DEFEATED! +25 XP. A weakened creature is easier to capture before it falls.');
+ }
+ updateHUD();
+}
+function capture(){
+ if(!beast.alive){say('No living target to capture. Find another corrupted creature in a future build.');return}
+ if(Math.hypot(player.x-beast.x,player.y-beast.y)>68){say('TOO FAR AWAY. Approach the Glitch Pup first.');return}
+ if(beast.hp>beast.max*.4){say('CAPTURE FAILED. Weaken the creature below 40% HP first.');return}
+ beast.alive=false;beast.captured=true;player.familiars++;player.xp+=15;
+ say('CAPTURE SUCCESSFUL! GLITCH PUP joined your familiar collection. +15 XP.');
+ updateHUD();
+}
+function recover(){
+ if(player.hp===player.max){say('HP already at maximum.');return}
+ player.hp=Math.min(player.max,player.hp+25);
+ say('RECOVERY PULSE ACTIVATED. Restored 25 HP.');
+ updateHUD();
+}
+function frame(t){
+ const dt=Math.min((t-last)/16.67||1,2);last=t;walk+=dt;
+ let dx=0,dy=0;
+ if(keys.ArrowUp||keys.w)dy--;
+ if(keys.ArrowDown||keys.s)dy++;
+ if(keys.ArrowLeft||keys.a)dx--;
+ if(keys.ArrowRight||keys.d)dx++;
+ if(dx||dy){const l=Math.hypot(dx,dy);move(dx/l*2.3*dt,dy/l*2.3*dt)}
+ if(flash>0)flash-=dt;
+ camera.x=Math.max(0,Math.min(world.w-W,player.x-W/2));
+ camera.y=Math.max(0,Math.min(world.h-H,player.y-H/2));
+ drawWorld();requestAnimationFrame(frame);
+}
+window.addEventListener('keydown',e=>{
+ const k=e.key.length===1?e.key.toLowerCase():e.key;
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+ keys[k]=true;
+ if(e.repeat)return;
+ if(e.code==='Space')attack();
+ if(k==='e')capture();
+ if(k==='q')recover();
+});
+window.addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false});
+document.querySelectorAll('[data-key]').forEach(b=>{
+ const k=b.dataset.key;
+ const down=e=>{e.preventDefault();keys[k]=true};
+ const up=e=>{e.preventDefault();keys[k]=false};
+ b.addEventListener('pointerdown',down);
+ b.addEventListener('pointerup',up);
+ b.addEventListener('pointerleave',up);
+ b.addEventListener('pointercancel',up);
+});
+document.getElementById('attack').onclick=attack;
+document.getElementById('capture').onclick=capture;
+document.getElementById('heal').onclick=recover;
+updateHUD();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
