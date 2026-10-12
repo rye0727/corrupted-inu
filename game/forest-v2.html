@@ -211,32 +211,79 @@ function drawGround(){
   }
 }
 
+
 function drawTree(x,y,size,seed){
-let X=x-cam.x,Y=y-cam.y;
-if(X<-size*2||X>W+size*2||Y<-size*2||Y>H+size*2)return;
-ctx.fillStyle="#14241d";
-ctx.beginPath();ctx.ellipse(X,Y+size*.43,size*.72,size*.31,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#4a3526";
-ctx.fillRect(X-size*.14,Y-size*.02,size*.28,size*.62);
-ctx.fillStyle="#62452d";
-ctx.fillRect(X-size*.05,Y+size*.03,size*.1,size*.44);
-let layers=[
-{dx:0,dy:-.38,r:1,c:"#193b2a"},
-{dx:-.38,dy:-.1,r:.78,c:"#245036"},
-{dx:.35,dy:-.13,r:.8,c:"#2b5b39"},
-{dx:-.12,dy:-.57,r:.72,c:"#376642"},
-{dx:.19,dy:-.43,r:.7,c:"#315b39"},
-{dx:0,dy:-.28,r:.53,c:"#417148"}
-];
-for(let l of layers){
-ctx.fillStyle=l.c;
-ctx.beginPath();ctx.ellipse(X+size*l.dx,Y+size*l.dy,size*l.r,size*l.r*.77,0,0,Math.PI*2);ctx.fill();
+  const X=x-cam.x,Y=y-cam.y;
+  if(X<-size*2||X>W+size*2||Y<-size*2||Y>H+size*2)return;
+
+  const sway=Math.sin(worldTime*.65+seed)*1.3;
+
+  // Deep ground shadow
+  ctx.fillStyle="#101e19";
+  ctx.beginPath();
+  ctx.ellipse(X,Y+size*.36,size*.95,size*.42,0,0,Math.PI*2);
+  ctx.fill();
+
+  // Exposed roots
+  ctx.strokeStyle="#493526";
+  ctx.lineWidth=Math.max(2,size*.09);
+  ctx.beginPath();
+  ctx.moveTo(X,Y+size*.1);
+  ctx.lineTo(X-size*.42,Y+size*.4);
+  ctx.moveTo(X,Y+size*.12);
+  ctx.lineTo(X+size*.43,Y+size*.37);
+  ctx.stroke();
+
+  // Trunk
+  ctx.fillStyle="#493526";
+  ctx.fillRect(X-size*.17,Y-size*.12,size*.34,size*.57);
+  ctx.fillStyle="#765035";
+  ctx.fillRect(X-size*.07,Y-size*.1,size*.09,size*.48);
+
+  // Dense, layered canopy
+  const layers=[
+    [-.52,-.20,.58,"#173b2b"],
+    [.48,-.18,.59,"#1c432d"],
+    [-.28,-.58,.62,"#205034"],
+    [.28,-.58,.62,"#24583a"],
+    [0,-.88,.52,"#2c6240"],
+    [-.57,-.55,.37,"#316a43"],
+    [.58,-.49,.38,"#2a5e3a"],
+    [-.13,-.38,.64,"#347147"]
+  ];
+
+  for(const l of layers){
+    const lx=X+size*l[0]+sway;
+    const ly=Y+size*l[1];
+    const r=size*l[2];
+
+    ctx.fillStyle="#142e23";
+    ctx.beginPath();
+    ctx.ellipse(lx+2,ly+4,r*1.04,r*.78,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle=l[3];
+    ctx.beginPath();
+    ctx.ellipse(lx,ly,r,r*.76,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // Pixel-like canopy highlights
+  ctx.fillStyle="#56864d";
+  ctx.fillRect(X-size*.29+sway,Y-size*.79,size*.23,size*.09);
+  ctx.fillRect(X+size*.17+sway,Y-size*.54,size*.19,size*.08);
+  ctx.fillRect(X-size*.55+sway,Y-size*.38,size*.15,size*.09);
+
+  // Deep foliage blocks
+  ctx.fillStyle="#193c2a";
+  ctx.fillRect(X-size*.65+sway,Y-size*.34,size*.17,size*.16);
+  ctx.fillRect(X+size*.42+sway,Y-size*.32,size*.19,size*.15);
+
+  // Tiny glowing moss
+  ctx.fillStyle="#8ca85b";
+  ctx.fillRect(X-size*.25+sway,Y-size*.53,Math.max(2,size*.08),2);
 }
-ctx.fillStyle="#527c48";
-ctx.beginPath();ctx.ellipse(X-size*.14,Y-size*.58,size*.23,size*.13,-.4,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#152d23";
-ctx.fillRect(X+size*.12,Y-size*.26,3,4);
-}
+
 function drawRock(x,y,s){
 let X=x-cam.x,Y=y-cam.y;
 if(X<-s-10||X>W+s+10||Y<-s-10||Y>H+s+10)return;
@@ -281,37 +328,209 @@ if(pathAt(x,y)&&hash(i,22)>.9)continue;
 drawTree(x,y,18+hash(i,90)*28,i);
 }
 }
+
 function drawBeast(b){
-let X=b.x-cam.x,Y=b.y-cam.y;
-if(X<-50||X>W+50||Y<-50||Y>H+50)return;
-ctx.fillStyle="#09100edb";ctx.beginPath();ctx.ellipse(X,Y+12,19,8,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#a92842";ctx.beginPath();ctx.ellipse(X,Y,15,12,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#db4158";ctx.beginPath();ctx.ellipse(X-3,Y-4,10,7,-.2,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#7c203a";ctx.beginPath();ctx.moveTo(X-10,Y-6);ctx.lineTo(X-15,Y-20);ctx.lineTo(X-3,Y-12);ctx.fill();
-ctx.beginPath();ctx.moveTo(X+7,Y-8);ctx.lineTo(X+15,Y-17);ctx.lineTo(X+14,Y-3);ctx.fill();
-ctx.fillStyle="#ffb2bd";ctx.fillRect(X-8,Y-2,4,4);ctx.fillRect(X+5,Y-2,4,4);
-ctx.fillStyle="#17141d";ctx.fillRect(X-7,Y-1,2,3);ctx.fillRect(X+6,Y-1,2,3);
-ctx.fillStyle="#160e16";ctx.fillRect(X-4,Y+5,9,2);
-ctx.fillStyle="#130f15";ctx.fillRect(X-17,Y-25,34,5);
-ctx.fillStyle="#ff4c69";ctx.fillRect(X-17,Y-25,34*(b.hp/b.maxHp),5);
+  const X=b.x-cam.x,Y=b.y-cam.y;
+  if(X<-55||X>W+55||Y<-55||Y>H+55)return;
+
+  const bob=Math.sin(b.phase*5)*2;
+  const cy=Y+bob;
+
+  // Shadow
+  ctx.fillStyle="#090d10";
+  ctx.beginPath();
+  ctx.ellipse(X,cy+15,22,9,0,0,Math.PI*2);
+  ctx.fill();
+
+  // Corrupted aura
+  ctx.globalAlpha=.3+Math.sin(worldTime*4+b.phase)*.12;
+  ctx.fillStyle="#ff244c";
+  ctx.beginPath();
+  ctx.arc(X,cy,24,0,Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Tail
+  ctx.strokeStyle="#792039";
+  ctx.lineWidth=7;
+  ctx.beginPath();
+  ctx.moveTo(X+11,cy+6);
+  ctx.lineTo(X+20,cy+1);
+  ctx.lineTo(X+23,cy-7);
+  ctx.stroke();
+
+  // Ears
+  ctx.fillStyle="#791b35";
+  ctx.beginPath();
+  ctx.moveTo(X-14,cy-8);
+  ctx.lineTo(X-18,cy-26);
+  ctx.lineTo(X-3,cy-17);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(X+5,cy-17);
+  ctx.lineTo(X+18,cy-27);
+  ctx.lineTo(X+16,cy-7);
+  ctx.closePath();
+  ctx.fill();
+
+  // Body
+  ctx.fillStyle="#8f203c";
+  ctx.beginPath();
+  ctx.ellipse(X,cy+7,17,13,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle="#cf3453";
+  ctx.beginPath();
+  ctx.ellipse(X-3,cy+4,12,9,-.25,0,Math.PI*2);
+  ctx.fill();
+
+  // Face
+  ctx.fillStyle="#e64b66";
+  ctx.beginPath();
+  ctx.ellipse(X,cy-7,15,12,0,0,Math.PI*2);
+  ctx.fill();
+
+  // Muzzle
+  ctx.fillStyle="#ff9aaa";
+  ctx.fillRect(X-6,cy-1,12,7);
+
+  // Eyes
+  ctx.fillStyle="#fff0d8";
+  ctx.fillRect(X-10,cy-10,5,5);
+  ctx.fillRect(X+5,cy-10,5,5);
+  ctx.fillStyle="#17111b";
+  ctx.fillRect(X-8,cy-9,3,4);
+  ctx.fillRect(X+6,cy-9,3,4);
+
+  // Nose and jagged mouth
+  ctx.fillStyle="#270d19";
+  ctx.fillRect(X-2,cy+1,5,3);
+  ctx.fillRect(X-5,cy+6,11,2);
+
+  // Crimson glitch marks
+  ctx.fillStyle="#ff8196";
+  ctx.fillRect(X-14,cy-3,4,2);
+  ctx.fillRect(X+10,cy+3,4,2);
+  ctx.fillRect(X+2,cy-18,3,5);
+
+  // Health bar
+  ctx.fillStyle="#100e16";
+  ctx.fillRect(X-19,cy-34,38,6);
+  ctx.fillStyle="#ff385d";
+  ctx.fillRect(X-18,cy-33,36*Math.max(0,b.hp/b.maxHp),4);
+  ctx.fillStyle="#ffb0bd";
+  ctx.fillRect(X-18,cy-33,36*Math.max(0,b.hp/b.maxHp),1);
 }
+
+
 function drawPlayer(){
-let X=player.x-cam.x,Y=player.y-cam.y;
-ctx.fillStyle="#0b100edb";ctx.beginPath();ctx.ellipse(X,Y+14,18,8,0,0,Math.PI*2);ctx.fill();
-if(player.invuln>0&&Math.floor(worldTime*12)%2===0)return;
-ctx.fillStyle="#d8b88c";ctx.fillRect(X-9,Y-5,18,15);
-ctx.fillStyle="#dcae7a";ctx.fillRect(X-11,Y-13,22,14);
-ctx.fillStyle="#f0c89a";ctx.fillRect(X-7,Y-15,14,7);
-ctx.fillStyle="#e8e1ce";ctx.fillRect(X-12,Y-17,7,8);ctx.fillRect(X+5,Y-17,7,8);
-ctx.fillStyle="#202b25";ctx.fillRect(X-7,Y-8,4,4);ctx.fillRect(X+4,Y-8,4,4);
-ctx.fillStyle="#a81f3a";ctx.fillRect(X-10,Y+4,20,9);
-ctx.fillStyle="#f05b70";ctx.fillRect(X-10,Y+4,20,3);
-ctx.fillStyle="#e4e8d5";ctx.fillRect(X-8,Y+13,6,5);ctx.fillRect(X+3,Y+13,6,5);
-if(player.attack>0){
-ctx.strokeStyle="#fff1c5";ctx.lineWidth=4;ctx.beginPath();ctx.arc(X,Y,38,-1.4,1.1);ctx.stroke();
-ctx.strokeStyle="#ff526b";ctx.lineWidth=2;ctx.beginPath();ctx.arc(X,Y,43,-1.3,1.2);ctx.stroke();
+  const X=player.x-cam.x,Y=player.y-cam.y;
+  const walking=keys.w||keys.a||keys.s||keys.d||
+    keys.ArrowUp||keys.ArrowDown||keys.ArrowLeft||keys.ArrowRight;
+  const step=walking?Math.sin(worldTime*15)*2:0;
+
+  // Shadow
+  ctx.fillStyle="#09110edb";
+  ctx.beginPath();
+  ctx.ellipse(X,Y+17,19,8,0,0,Math.PI*2);
+  ctx.fill();
+
+  if(player.invuln>0&&Math.floor(worldTime*12)%2===0)return;
+
+  // Boots
+  ctx.fillStyle="#26312b";
+  ctx.fillRect(X-11,Y+12+step,8,7);
+  ctx.fillRect(X+4,Y+12-step,8,7);
+  ctx.fillStyle="#e4d8bd";
+  ctx.fillRect(X-11,Y+16+step,8,3);
+  ctx.fillRect(X+4,Y+16-step,8,3);
+
+  // Red explorer jacket
+  ctx.fillStyle="#721d35";
+  ctx.fillRect(X-13,Y-3,26,18);
+  ctx.fillStyle="#c32b49";
+  ctx.fillRect(X-11,Y-5,22,17);
+  ctx.fillStyle="#f04d68";
+  ctx.fillRect(X-9,Y-5,5,13);
+  ctx.fillStyle="#762038";
+  ctx.fillRect(X+2,Y-3,3,13);
+
+  // Neck and cream chest
+  ctx.fillStyle="#f0d7ac";
+  ctx.fillRect(X-7,Y+4,14,9);
+  ctx.fillStyle="#d6b98c";
+  ctx.fillRect(X-5,Y+8,10,4);
+
+  // Shiba Inu ears
+  ctx.fillStyle="#a66b42";
+  ctx.beginPath();
+  ctx.moveTo(X-12,Y-15);
+  ctx.lineTo(X-13,Y-29);
+  ctx.lineTo(X-3,Y-20);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(X+3,Y-20);
+  ctx.lineTo(X+13,Y-29);
+  ctx.lineTo(X+12,Y-14);
+  ctx.closePath();
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle="#c88d59";
+  ctx.beginPath();
+  ctx.ellipse(X,Y-13,14,13,0,0,Math.PI*2);
+  ctx.fill();
+
+  // Forehead highlight
+  ctx.fillStyle="#e5b47d";
+  ctx.fillRect(X-6,Y-24,12,5);
+  ctx.fillRect(X-9,Y-20,18,7);
+
+  // Cream cheeks and muzzle
+  ctx.fillStyle="#f2dfbd";
+  ctx.fillRect(X-10,Y-13,7,8);
+  ctx.fillRect(X+3,Y-13,7,8);
+  ctx.fillRect(X-6,Y-8,12,7);
+
+  // Eyes and nose
+  ctx.fillStyle="#302019";
+  ctx.fillRect(X-8,Y-17,4,5);
+  ctx.fillRect(X+4,Y-17,4,5);
+  ctx.fillStyle="#fff4dc";
+  ctx.fillRect(X-7,Y-17,2,2);
+  ctx.fillRect(X+5,Y-17,2,2);
+  ctx.fillStyle="#24151a";
+  ctx.fillRect(X-2,Y-7,4,3);
+
+  // Tiny crimson signal device
+  ctx.fillStyle="#ff526b";
+  ctx.fillRect(X+7,Y+1,4,5);
+  ctx.fillStyle="#ffc0c8";
+  ctx.fillRect(X+8,Y+2,2,2);
+
+  // Attack slash
+  if(player.attack>0){
+    ctx.strokeStyle="#fff1c5";
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.arc(X,Y,39,-1.4,1.1);
+    ctx.stroke();
+
+    ctx.strokeStyle="#ff405f";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(X,Y,45,-1.3,1.2);
+    ctx.stroke();
+
+    ctx.fillStyle="#ff8296";
+    ctx.fillRect(X+28,Y-25,5,5);
+  }
 }
-}
+
 function puff(x,y,color){
 for(let i=0;i<9;i++)particles.push({x,y,vx:rand(-65,65),vy:rand(-70,30),life:rand(.25,.65),max:.65,color,size:rand(2,5)});
 }
