@@ -138,24 +138,56 @@ function drawWorld(){
 
 rect(0,0,W,H,'#172a25');
 
-// Natural forest floor with world-aligned pixel details
-for(let y=0;y<H;y+=T){
- for(let x=0;x<W;x+=T){
-  let wx=Math.floor((x+camera.x)/T);
-  let wy=Math.floor((y+camera.y)/T);
-  let n=Math.abs((wx*17+wy*31+wx*wy*7)%17);
 
-  if(n===0)rect(x+5,y+7,14,3,'#1d352b');
-  if(n===1)rect(x+18,y+20,5,3,'#254032');
-  if(n===2)rect(x+7,y+24,3,3,'#304633');
-  if(n===3)rect(x+23,y+6,3,5,'#203b2e');
 
-  if(n===4){
-   rect(x+12,y+12,3,3,'#57233c');
-   rect(x+13,y+13,1,1,'#ff526d');
+
+
+ // Natural forest floor — richer pixel-art grass
+ const tileSize = T;
+ for(let y=0;y<H;y+=tileSize){
+  for(let x=0;x<W;x+=tileSize){
+   const wx=Math.floor((x+camera.x)/tileSize);
+   const wy=Math.floor((y+camera.y)/tileSize);
+   const n=Math.abs((wx*17+wy*31+wx*wy*7)%23);
+
+   if(n<8){
+    rect(x,y,tileSize,tileSize,'#1a3028');
+   }else if(n<15){
+    rect(x,y,tileSize,tileSize,'#1c352b');
+   }else{
+    rect(x,y,tileSize,tileSize,'#20382c');
+   }
+
+   if(n%2===0){
+    rect(x+5,y+7,4,2,'#34513a');
+    rect(x+8,y+5,2,4,'#2b4934');
+   }
+   if(n%3===0){
+    rect(x+18,y+19,6,2,'#294632');
+    rect(x+21,y+16,2,4,'#304d36');
+   }
+   if(n%4===0){
+    rect(x+7,y+23,3,3,'#3a5439');
+   }
+   if(n%5===0){
+    rect(x+24,y+8,3,3,'#294631');
+    rect(x+23,y+7,2,2,'#3b573d');
+   }
+
+   if(n===6 || n===17){
+    rect(x+12,y+13,4,2,'#66513b');
+    rect(x+14,y+12,2,3,'#806044');
+   }
+   if(n===9){
+    rect(x+12,y+12,4,4,'#70223f');
+    rect(x+13,y+13,2,2,'#ff526d');
+   }
   }
  }
-}
+
+
+
+
 
  // Corrupted signal zones
  for(let i=0;i<5;i++){
